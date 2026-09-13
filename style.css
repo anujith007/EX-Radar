@@ -58,6 +58,10 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .threshold-control strong { color: var(--green-bright); font-variant-numeric: tabular-nums; }
 .threshold-control input { display: block; width: 100%; margin: 11px 0 5px; accent-color: var(--green-bright); }
 .threshold-control small { color: var(--muted); }
+.sound-control { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 22px; }
+.sound-drop { flex: 1 1 220px; min-height: 78px; padding: 12px 16px; }
+.sound-control .secondary-button { flex: 0 0 auto; }
+.sound-help { display: block; margin-top: 10px; color: var(--muted); font-size: .78rem; }
 .live-status { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: .88rem; }
 #status-dot { width: 9px; height: 9px; border-radius: 50%; background: #607078; }
 #status-dot.ready { background: var(--green-bright); }

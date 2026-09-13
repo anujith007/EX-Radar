@@ -19,6 +19,8 @@
     startButton: $("start-share-button"), stopButton: $("stop-share-button"),
     enableAlertsButton: $("enable-alerts-button"), alertStatus: $("alert-status"),
     threshold: $("threshold-input"), thresholdValue: $("threshold-value"),
+    customSoundUpload: $("custom-sound-upload"), customSoundName: $("custom-sound-name"),
+    testSoundButton: $("test-sound-button"), resetSoundButton: $("reset-sound-button"),
     video: $("screen-video"), canvas: $("capture-canvas"), overlay: $("chat-overlay"),
     status: $("app-status"), statusDot: $("status-dot")
   };
@@ -34,6 +36,8 @@
   let unusedRoasts = [];
   let audioContext = null;
   let extensionAlarmIntensity = 1;
+  let customSoundBuffer = null;
+  let customSoundLabel = "";
 
   function threshold() { return Number(ui.threshold.value); }
   function setStatus(message, mode = "idle") {
@@ -53,6 +57,17 @@
   function setAlertStatus(message, armed = false) {
     ui.alertStatus.textContent = message;
     ui.alertStatus.className = `alert-status${armed ? " armed" : ""}`;
+  }
+  function updateSoundControls() {
+    ui.testSoundButton.disabled = !(audioContext && audioContext.state === "running");
+    ui.resetSoundButton.disabled = !customSoundBuffer;
+  }
+  function resetCustomSound() {
+    customSoundBuffer = null;
+    customSoundLabel = "";
+    ui.customSoundUpload.value = "";
+    ui.customSoundName.textContent = "default outbreak siren";
+    console.info("[Ex Radar] Custom alert sound cleared. Reverting to the outbreak siren.");
   }
 
   async function loadModels() {
@@ -160,6 +175,7 @@
       console.warn("[Ex Radar] Could not arm alarm sound:", error);
     }
     const soundReady = audioContext?.state === "running";
+    updateSoundControls();
     ui.enableAlertsButton.disabled = !(notificationReady || soundReady);
     ui.enableAlertsButton.textContent = notificationReady ? "Screen alerts armed" : soundReady ? "Sound armed (alerts blocked)" : "Alerts unavailable";
     setAlertStatus(
@@ -200,6 +216,14 @@
 
     siren.start(now); growl.start(now);
     siren.stop(now + 0.76); growl.stop(now + 0.76);
+  }
+
+  function playCustomSound() {
+    const now = audioContext.currentTime;
+    const source = audioContext.createBufferSource();
+    source.buffer = customSoundBuffer;
+    source.connect(audioContext.destination);
+    source.onended = () => source.disconnect();    source.start(now);
   }
 
   function showDesktopAlert(message, distance) {
@@ -292,7 +316,7 @@
     const roast = chooseRoast(distance);
     showRoast(distance, roast);
     showDesktopAlert(roast, distance);
-    playOutbreakAlarm();
+    if (customSoundBuffer) playCustomSound(); else playOutbreakAlarm();
     notifyCompanionExtension(roast, distance);
   }
 
@@ -319,6 +343,42 @@
     window.setTimeout(() => bubble.remove(), 11000);
     console.warn(`[Ex Radar] MATCH DETECTED — distance ${formatDistance(distance)}. Roast deployed.`);
   }
+
+  ui.customSoundUpload.addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      if (!audioContext || audioContext.state !== "running") throw new Error("Enable screen alerts + sound first — the audio engine has to be armed before a custom sound can load.");
+      setStaticResult(`Decoding “${file.name}”…`);
+      const raw = await file.arrayBuffer();
+      const buffer = await audioContext.decodeAudioData(raw);
+      if (!buffer.length) throw new Error("That file has no audio.");
+      customSoundBuffer = buffer;
+      customSoundLabel = file.name;
+      ui.customSoundName.textContent = file.name;
+      updateSoundControls();
+      setStaticResult(`Custom sound armed: “${file.name}” (${buffer.duration.toFixed(1)}s).`, "match");
+      console.info(`[Ex Radar] Custom alert sound loaded: “${file.name}” — ${buffer.duration.toFixed(2)}s, ${buffer.numberOfChannels}ch/${buffer.sampleRate}Hz.`);
+    } catch (error) {
+      console.error("[Ex Radar] Custom sound load failed:", error);
+      setStaticResult(error.message, "error");
+    } finally { event.target.value = ""; }
+  });
+
+  ui.testSoundButton.addEventListener("click", () => {
+    if (!audioContext || audioContext.state !== "running") return;
+    if (customSoundBuffer) {
+      playCustomSound();
+    } else {
+      playOutbreakAlarm();
+    }
+    console.info(`[Ex Radar] Sound preview — ${customSoundBuffer ? `custom file “${customSoundLabel}”` : "default outbreak siren"}.`);
+  });
+
+  ui.resetSoundButton.addEventListener("click", () => {
+    resetCustomSound();
+    updateSoundControls();
+  });
 
   ui.startButton.addEventListener("click", startScreenShare);
   ui.stopButton.addEventListener("click", stopScreenShare);

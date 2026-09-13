@@ -65,6 +65,16 @@
           <input id="threshold-input" type="range" min="0.30" max="0.70" value="0.50" step="0.01" />
           <small>Lower is stricter. Watch the console distances and tune live.</small>
         </label>
+        <div class="sound-control">
+          <label class="file-drop sound-drop" for="custom-sound-upload">
+            <span class="file-label">custom alert sound</span>
+            <span class="file-help" id="custom-sound-name">default outbreak siren</span>
+            <input id="custom-sound-upload" type="file" accept="audio/*" />
+          </label>
+          <button id="test-sound-button" class="secondary-button" type="button" disabled>Test sound</button>
+          <button id="reset-sound-button" class="secondary-button" type="button" disabled>Reset</button>
+        </div>
+        <small class="sound-help">Match alerts play your file instead of the siren. Decoded locally, never uploaded.</small>
         <div class="live-status"><span id="status-dot" aria-hidden="true"></span><span id="app-status">Loading face detector models…</span></div>
       </section>
 

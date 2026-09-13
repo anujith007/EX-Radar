@@ -1,38 +1,43 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ex Radar Companion</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <main>
-      <p class="kicker">EX RADAR COMPANION</p>
-      <h1>Arm this tab.</h1>
-      <p class="copy">Open the tab you will share, then arm it. A face match from Ex Radar will appear here as a banner.</p>
-      <button id="arm-button">Arm current tab</button>
-      <button id="clear-button" class="secondary">Disarm</button>
-      <p id="status" role="status">No tab armed.</p>
-      <section class="settings" aria-labelledby="settings-title">
-        <h2 id="settings-title">Alert settings</h2>
-        <label>Banner position
-          <select id="position-input">
-            <option value="top-right">Top right</option>
-            <option value="top-left">Top left</option>
-            <option value="bottom-right">Bottom right</option>
-            <option value="bottom-left">Bottom left</option>
-          </select>
-        </label>
-        <label>Banner duration <output id="duration-value">10 seconds</output>
-          <input id="duration-input" type="range" min="3" max="30" step="1" value="10" />
-        </label>
-        <label>Warning sound <output id="sound-value">100%</output>
-          <input id="sound-input" type="range" min="0" max="100" step="10" value="100" />
-        </label>
-        <p class="setting-help">Sound intensity controls Ex Radar’s original outbreak alarm. It remains silent until you enable sound on the scanner page.</p>
-      </section>
-    </main>
-    <script src="popup.js"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ex Radar Companion</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <main>
+    <p class="kicker">EX RADAR COMPANION</p>
+    <h1>Arm this tab.</h1>
+    <p class="copy">Open the tab you will share, then arm it. A face match from Ex Radar will appear here as a banner.
+    </p>
+    <button id="arm-button">Arm current tab</button>
+    <button id="clear-button" class="secondary">Disarm</button>
+    <p id="status" role="status">No tab armed.</p>
+    <section class="settings" aria-labelledby="settings-title">
+      <h2 id="settings-title">Alert settings</h2>
+      <label>Banner position
+        <select id="position-input">
+          <option value="top-right">Top right</option>
+          <option value="top-left">Top left</option>
+          <option value="bottom-right">Bottom right</option>
+          <option value="bottom-left">Bottom left</option>
+        </select>
+      </label>
+      <label>Banner duration <output id="duration-value">10 seconds</output>
+        <input id="duration-input" type="range" min="3" max="30" step="1" value="10" />
+      </label>
+      <label>Warning sound <output id="sound-value">100%</output>
+        <input id="sound-input" type="range" min="0" max="100" step="10" value="100" />
+      </label>
+      <p class="setting-help">Sound intensity controls Ex Radar’s original outbreak alarm. A custom sound chosen on the
+        scanner page plays instead. Sound remains silent until you enable it on the scanner page.</p>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+
 </html>
