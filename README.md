@@ -73,39 +73,60 @@ python -m http.server 8791
 
 #### Screenshots (Add at least 3)
 
-![Screenshot1](Add screenshot 1 here with proper name)
-Add caption explaining what this shows
-
-![Screenshot2](Add screenshot 2 here with proper name)
-Add caption explaining what this shows
-
-![Screenshot3](Add screenshot 3 here with proper name)
-Add caption explaining what this shows
+https://drive.google.com/drive/folders/1NCe3qoJrZjVAryUWk5DrmHrJbYjFpumT?usp=drive_link
 
 #### Diagrams
+## System Workflow
 
-![Workflow](Add your workflow/architecture diagram here)
-Add caption explaining your workflow — e.g. reference enrollment → screen capture → face matching → alert dispatch (chat bubble, sound, notification, extension banners)
 
-**For Hardware:**
-
-N/A — this is a software-only project.
-
+```text
+User
+  │
+  ▼
+Enroll Reference Face
+  │
+  ▼
+Convert Photo to Descriptor
+  │
+  ▼
+Capture Screen Every 1.2s
+  │
+  ▼
+Detect All Faces in Frame
+  │
+  ▼
+Face Match
+(Euclidean Distance vs Threshold)
+  │
+  ├─────────────── No Match ──────────────► Continue Scanning
+  │
+  ▼
+Match Detected
+  │
+  ├──────────────► Chat Bubble
+  │                  AI Roast, On-Page
+  │
+  ├──────────────► Alarm Sound
+  │                  Siren or Custom File
+  │
+  ├──────────────► Notification
+  │                  Desktop Alert
+  │
+  └──────────────► Extension Banners
+                     Every Tab, Synced
+```
 ### Project Demo
 
 #### Video
 
-[Add your demo video link here]
-Explain what the video demonstrates — e.g. enrolling a face, running the static match test, arming the window, sharing the screen, and triggering the full alert (bubble + roast + sound + notification + banners) on a match.
+Full demo: https://drive.google.com/file/d/1o4To3xB6yMfRnpoQ9wdJtvFuRtBAVB5V/view?usp=sharing
 
-#### Additional Demos
-
-[Add any extra demo materials/links]
+Drive for chrome extension: https://drive.google.com/drive/folders/1b6lRHNm2ly7pBlvkbyQcXmjGXkbRLqNR?usp=sharing
 
 ### Team Contributions
 
-* [Name 1]: [Specific contributions]
-* [Name 2]: [Specific contributions]
-* [Name 3]: [Specific contributions]
+* Gayathri: Frontend,Documentation
+* Anujith: Major workflow,backend
+
 
 Made with ❤️ at TinkerHub Useless Projects
