@@ -6,13 +6,34 @@
   // Bridge only messages emitted by the scanner page. This is intentionally a
   // simple DOM message, not a network request and not a transfer of image data.
   if (isLocalExRadarApp) {
+    // Keep the MV3 service worker alive while a scan is running so match
+    // alerts broadcast instantly instead of waiting on a cold worker start.
+    let heartbeatTimer = null;
+    function setHeartbeat(active) {
+      if (active && !heartbeatTimer) {
+        heartbeatTimer = window.setInterval(() => {
+          chrome.runtime.sendMessage({ type: "SCAN_HEARTBEAT" }, () => void chrome.runtime.lastError);
+        }, 20000);
+        chrome.runtime.sendMessage({ type: "SCAN_HEARTBEAT" }, () => void chrome.runtime.lastError);
+      } else if (!active && heartbeatTimer) {
+        window.clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+    }
+
     window.addEventListener("message", (event) => {
-      if (event.source !== window || event.data?.channel !== "ex-radar" || event.data?.type !== "MATCH_DETECTED") return;
-      chrome.runtime.sendMessage({
-        type: "EX_RADAR_MATCH",
-        roast: event.data.roast,
-        distance: event.data.distance
-      });
+      if (event.source !== window || event.data?.channel !== "ex-radar") return;
+      if (event.data.type === "MATCH_DETECTED") {
+        chrome.runtime.sendMessage({
+          type: "EX_RADAR_MATCH",
+          roast: event.data.roast,
+          distance: event.data.distance
+        });
+      } else if (event.data.type === "SCAN_STARTED") {
+        setHeartbeat(true);
+      } else if (event.data.type === "SCAN_STOPPED") {
+        setHeartbeat(false);
+      }
     });
 
     async function syncSettingsToScanner() {

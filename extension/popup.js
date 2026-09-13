@@ -7,18 +7,20 @@ const durationValue = document.getElementById("duration-value");
 const soundInput = document.getElementById("sound-input");
 const soundValue = document.getElementById("sound-value");
 
-async function currentTab() {
-  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  return tab;
+async function currentWindow() {
+  return chrome.windows.getCurrent();
 }
 
 async function refreshStatus() {
-  const { tabId } = await chrome.runtime.sendMessage({ type: "GET_ARMED_TAB" });
-  if (!tabId) return;
+  const { windowId } = await chrome.runtime.sendMessage({ type: "GET_ARMED_WINDOW" });
+  if (!windowId) return;
   try {
-    const tab = await chrome.tabs.get(tabId);
-    status.textContent = `Armed: ${tab.title || "current tab"}`;
-  } catch { status.textContent = "No tab armed."; }
+    const win = await chrome.windows.get(windowId);
+    const [tab] = await chrome.tabs.query({ windowId, active: true });
+    status.textContent = win ? `Armed: this window (${tab?.title ? `active tab “${tab.title}”` : "all tabs"})` : "No window armed.";
+  } catch {
+    status.textContent = "No window armed.";
+  }
 }
 
 function renderSettings(settings) {
@@ -42,22 +44,48 @@ async function saveSettings() {
 }
 
 armButton.addEventListener("click", async () => {
-  const tab = await currentTab();
-  if (!tab?.id || !/^https?:|^file:/.test(tab.url || "")) {
-    status.textContent = "Open a normal website or local file first.";
+  const win = await currentWindow();
+  if (!win?.id) {
+    status.textContent = "Could not identify this window.";
     return;
   }
-  const result = await chrome.runtime.sendMessage({ type: "ARM_CURRENT_TAB", tab: { id: tab.id, title: tab.title } });
-  status.textContent = result.ok ? `Armed: ${result.title}` : "Could not arm this tab.";
+  let result = null;
+  try {
+    result = await chrome.runtime.sendMessage({ type: "ARM_CURRENT_WINDOW", windowId: win.id });
+  } catch {
+    status.textContent = "Extension worker unreachable — reload it at chrome://extensions, then try again.";
+    return;
+  }
+  if (result?.ok) {
+    status.textContent = "Armed: this window — every tab will show alerts.";
+  } else if (result === null || result === undefined) {
+    status.textContent = "Extension updated — reload it at chrome://extensions, then try again.";
+  } else {
+    status.textContent = "Could not arm this window.";
+  }
+  refreshStatus();
 });
 
 clearButton.addEventListener("click", async () => {
-  await chrome.runtime.sendMessage({ type: "CLEAR_ARMED_TAB" });
-  status.textContent = "No tab armed.";
+  await chrome.runtime.sendMessage({ type: "CLEAR_ARMED_WINDOW" });
+  status.textContent = "No window armed.";
 });
 
 positionInput.addEventListener("change", saveSettings);
 durationInput.addEventListener("change", saveSettings);
 soundInput.addEventListener("change", saveSettings);
 chrome.runtime.sendMessage({ type: "GET_SETTINGS" }).then(renderSettings);
+
+// If the service worker predates window arming, tell the user to reload
+// instead of letting every arm attempt fail with the generic message.
+chrome.runtime.sendMessage({ type: "PING" }).then((pong) => {
+  if (pong && pong.version < 2) {
+    status.textContent = "Extension updated — click Reload at chrome://extensions, then reopen this popup.";
+    armButton.disabled = true;
+  }
+}).catch(() => {
+  status.textContent = "Extension worker unavailable — reload at chrome://extensions.";
+  armButton.disabled = true;
+});
+
 refreshStatus();

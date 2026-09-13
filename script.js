@@ -243,6 +243,7 @@
       ui.video.srcObject = displayStream;
       await ui.video.play();
       displayStream.getVideoTracks()[0].addEventListener("ended", stopScreenShare, { once: true });
+      postToExtension({ type: "SCAN_STARTED" });
       setStatus("Scanning shared screen every 1.2 seconds…", "scanning");
       console.info("[Ex Radar] Screen share started. Open DevTools to see every face distance.");
       updateControls();
@@ -257,6 +258,7 @@
   }
 
   function stopScreenShare() {
+    postToExtension({ type: "SCAN_STOPPED" });
     if (scanTimer) window.clearInterval(scanTimer);
     scanTimer = null;
     if (displayStream) displayStream.getTracks().forEach((track) => track.stop());
@@ -316,20 +318,26 @@
     const roast = chooseRoast(distance);
     showRoast(distance, roast);
     showDesktopAlert(roast, distance);
-    if (customSoundBuffer) playCustomSound(); else playOutbreakAlarm();
+    // Relay first so the extension banners are already in flight when the
+    // alarm sound starts — they should appear in the same instant.
     notifyCompanionExtension(roast, distance);
+    if (customSoundBuffer) playCustomSound(); else playOutbreakAlarm();
   }
 
-  // A companion extension listens for this local page message and relays it to
-  // the browser tab the user explicitly armed in the extension popup.
+  // A companion extension listens for these local page messages: MATCH_DETECTED
+  // is relayed to the armed window, SCAN_STARTED/SCAN_STOPPED keep its service
+  // worker warm so banners land in the same instant as the alarm sound.
+  function postToExtension(detail) {
+    window.postMessage({ channel: "ex-radar", ...detail }, window.location.protocol === "file:" ? "*" : window.location.origin);
+  }
+
   function notifyCompanionExtension(roast, distance) {
-    window.postMessage({
-      channel: "ex-radar",
+    postToExtension({
       type: "MATCH_DETECTED",
       roast,
       distance: formatDistance(distance),
       detectedAt: Date.now()
-    }, window.location.protocol === "file:" ? "*" : window.location.origin);
+    });
   }
 
   function showRoast(distance, roast) {

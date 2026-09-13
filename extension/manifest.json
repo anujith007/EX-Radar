@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Ex Radar Companion",
-  "description": "Injects Ex Detector alerts into a tab you explicitly arm.",
-  "version": "1.0.0",
+  "description": "Injects Ex Detector alerts into every tab of a browser window you arm.",
+  "version": "1.1.0",
   "permissions": ["tabs", "storage"],
   "action": {
     "default_title": "Ex Radar Companion",
