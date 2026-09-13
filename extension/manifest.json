@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Ex Radar Companion",
+  "description": "Injects Ex Detector alerts into a tab you explicitly arm.",
+  "version": "1.0.0",
+  "permissions": ["tabs", "storage"],
+  "action": {
+    "default_title": "Ex Radar Companion",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

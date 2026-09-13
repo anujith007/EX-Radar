@@ -1,0 +1,30 @@
+# Ex Radar Companion extension
+
+This Manifest V3 extension puts Ex Detector alerts **inside the tab you arm**. It does not receive screenshots, face descriptors, or uploaded images. The Ex Radar page only sends the final match text and distance to the extension.
+
+## Install in Chrome or Edge
+
+1. Open `chrome://extensions` in Chrome, or `edge://extensions` in Edge.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked**.
+4. Select this `extension` folder.
+5. Pin **Ex Radar Companion** from the extensions menu.
+
+If you open Ex Radar directly as a `file:///` page rather than at `localhost`, open the extension details and enable **Allow access to file URLs**.
+
+## Demo flow
+
+1. Open a separate normal browser tab containing the gallery/image you will share.
+2. Click the Ex Radar Companion icon in that tab and choose **Arm current tab**.
+3. In the Ex Radar page, enroll the reference face and start sharing the armed tab.
+4. When a match is detected, Ex Detector injects a green banner at the top-right of the armed tab.
+
+Use **Disarm** from the extension popup when the demo is over.
+
+## Settings
+
+The extension popup remembers these settings across browser restarts:
+
+- **Banner position:** any screen corner.
+- **Banner duration:** 3 to 30 seconds.
+- **Warning sound:** 0 to 100% of Ex Radar's built-in, original outbreak alarm. Click **Enable screen alerts + sound** in the Ex Radar page once per browser session to allow browser audio.

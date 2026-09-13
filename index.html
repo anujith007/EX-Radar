@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b141a" />
+    <title>Ex Radar — screen scanner</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">100% on-device · definitely a healthy use of technology</p>
+        <h1 id="page-title">EX <span>RADAR</span></h1>
+        <p class="subtitle">Drop in a reference face, test it, then share a tab. We watch; you pretend you were just scrolling.</p>
+      </section>
+
+      <section class="control-card" aria-labelledby="setup-title">
+        <div class="card-heading">
+          <span class="step-number">01</span>
+          <div>
+            <h2 id="setup-title">Enroll &amp; test</h2>
+            <p>Use a clear, front-facing demo/consented photo. Nothing leaves this browser.</p>
+          </div>
+        </div>
+
+        <div class="upload-grid">
+          <label class="file-drop" for="reference-upload">
+            <span class="file-label">reference face</span>
+            <span class="file-help">upload the “ex” photo</span>
+            <input id="reference-upload" type="file" accept="image/*" />
+          </label>
+          <label class="file-drop" for="test-upload">
+            <span class="file-label">static test image</span>
+            <span class="file-help">confirm match / no-match first</span>
+            <input id="test-upload" type="file" accept="image/*" />
+          </label>
+        </div>
+
+        <div class="preview-grid" aria-live="polite">
+          <div class="image-preview"><img id="reference-preview" alt="Reference preview" /><span id="reference-placeholder">no reference selected</span></div>
+          <div class="image-preview"><img id="test-preview" alt="Static test preview" /><span id="test-placeholder">no test image selected</span></div>
+        </div>
+        <button id="test-match-button" class="secondary-button" type="button" disabled>Run static match test</button>
+        <p id="static-result" class="result-line">Load the models, enroll a face, and try a test image.</p>
+      </section>
+
+      <section class="control-card" aria-labelledby="scan-title">
+        <div class="card-heading">
+          <span class="step-number">02</span>
+          <div>
+            <h2 id="scan-title">Live screen scan</h2>
+            <p>Share a browser tab or screen with a visible face. Samples every 1.2 seconds.</p>
+          </div>
+        </div>
+
+        <div class="scanner-actions">
+          <button id="start-share-button" class="primary-button" type="button" disabled>Start Screen Share</button>
+          <button id="stop-share-button" class="secondary-button" type="button" disabled>Stop scan</button>
+          <button id="enable-alerts-button" class="alert-button" type="button">Enable screen alerts + sound</button>
+        </div>
+        <p id="alert-status" class="alert-status">Optional: enable desktop alerts to see detections while viewing the shared tab.</p>
+        <label class="threshold-control" for="threshold-input">
+          <span>match threshold <strong id="threshold-value">0.50</strong></span>
+          <input id="threshold-input" type="range" min="0.30" max="0.70" value="0.50" step="0.01" />
+          <small>Lower is stricter. Watch the console distances and tune live.</small>
+        </label>
+        <div class="live-status"><span id="status-dot" aria-hidden="true"></span><span id="app-status">Loading face detector models…</span></div>
+      </section>
+
+      <p class="privacy-note">Privacy mode: descriptors, frames, and images stay in this tab. No uploads. No storage. No backend.</p>
+    </main>
+
+    <!-- Capture elements: present for the scanner, intentionally not shown as app content. -->
+    <video id="screen-video" muted playsinline aria-hidden="true"></video>
+    <canvas id="capture-canvas" aria-hidden="true"></canvas>
+
+    <aside id="chat-overlay" class="chat-overlay" aria-live="assertive" aria-label="Ex Detector notifications"></aside>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="roasts.js"></script>
+    <script defer src="script.js"></script>
+  </body>
+</html>
