@@ -83,14 +83,45 @@ Add caption explaining what this shows
 Add caption explaining what this shows
 
 #### Diagrams
+## System Workflow
 
-![Workflow](Add your workflow/architecture diagram here)
-Add caption explaining your workflow — e.g. reference enrollment → screen capture → face matching → alert dispatch (chat bubble, sound, notification, extension banners)
 
-**For Hardware:**
-
-N/A — this is a software-only project.
-
+```text
+User
+  │
+  ▼
+Enroll Reference Face
+  │
+  ▼
+Convert Photo to Descriptor
+  │
+  ▼
+Capture Screen Every 1.2s
+  │
+  ▼
+Detect All Faces in Frame
+  │
+  ▼
+Face Match
+(Euclidean Distance vs Threshold)
+  │
+  ├─────────────── No Match ──────────────► Continue Scanning
+  │
+  ▼
+Match Detected
+  │
+  ├──────────────► Chat Bubble
+  │                  AI Roast, On-Page
+  │
+  ├──────────────► Alarm Sound
+  │                  Siren or Custom File
+  │
+  ├──────────────► Notification
+  │                  Desktop Alert
+  │
+  └──────────────► Extension Banners
+                     Every Tab, Synced
+```
 ### Project Demo
 
 #### Video
