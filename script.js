@@ -1,4 +1,4 @@
-/* global faceapi, ROAST_BANK */
+/* global faceapi, ROAST_BANK, LanguageModel */
 (() => {
   "use strict";
 
@@ -21,6 +21,7 @@
     threshold: $("threshold-input"), thresholdValue: $("threshold-value"),
     customSoundUpload: $("custom-sound-upload"), customSoundName: $("custom-sound-name"),
     testSoundButton: $("test-sound-button"), resetSoundButton: $("reset-sound-button"),
+    aiStatus: $("ai-status"),
     video: $("screen-video"), canvas: $("capture-canvas"), overlay: $("chat-overlay"),
     status: $("app-status"), statusDot: $("status-dot")
   };
@@ -38,6 +39,9 @@
   let extensionAlarmIntensity = 1;
   let customSoundBuffer = null;
   let customSoundLabel = "";
+  let aiSession = null;
+  let aiRoastsReady = false;
+  let matchCount = 0;
 
   function threshold() { return Number(ui.threshold.value); }
   function setStatus(message, mode = "idle") {
@@ -68,6 +72,16 @@
     ui.customSoundUpload.value = "";
     ui.customSoundName.textContent = "default outbreak siren";
     console.info("[Ex Radar] Custom alert sound cleared. Reverting to the outbreak siren.");
+  }
+  function updateAiStatus() {
+    if (!ui.aiStatus) return;
+    if (aiRoastsReady) {
+      ui.aiStatus.textContent = "ai roasts: armed — fresh on-device burns";
+      ui.aiStatus.className = "ai-status armed";
+    } else {
+      ui.aiStatus.textContent = "ai roasts: classic bank (built-in AI not available in this browser)";
+      ui.aiStatus.className = "ai-status";
+    }
   }
 
   async function loadModels() {
@@ -177,6 +191,9 @@
     const soundReady = audioContext?.state === "running";
     updateSoundControls();
     ui.enableAlertsButton.disabled = !(notificationReady || soundReady);
+    // The alert button click is a user activation — exactly what the Prompt
+    // API needs to kick off the one-time Gemini Nano download.
+    initAiRoasts().then(updateAiStatus);
     ui.enableAlertsButton.textContent = notificationReady ? "Screen alerts armed" : soundReady ? "Sound armed (alerts blocked)" : "Alerts unavailable";
     setAlertStatus(
       notificationReady
@@ -290,12 +307,82 @@
       const match = closest < threshold();
       console.info(`[Ex Radar] LIVE SCAN — faces: ${detections.length}, closest distance: ${formatDistance(closest)}, threshold: ${threshold().toFixed(2)}, match: ${match}`);
       if (match && Date.now() - lastRoastAt >= ROAST_COOLDOWN_MS) {
+        matchCount += 1;
         triggerMatchAlert(closest);
         lastRoastAt = Date.now();
       }
     } catch (error) {
       console.error("[Ex Radar] LIVE SCAN error:", error);
     } finally { scanBusy = false; }
+  }
+
+  // ---------- AI roast engine (Chrome built-in Prompt API, on-device) ----------
+  // Generated with Gemini Nano inside the browser: nothing leaves the machine,
+  // which keeps the app's privacy promise intact. Falls back to ROAST_BANK.
+  const ROAST_SYSTEM_PROMPT = [
+    "You write one-line insults for Ex Detector, a joke app that roasts the user when their ex's face is spotted on screen.",
+    "Rules: exactly one sentence, max 22 words, lowercase start, no hashtags, no emoji, no quotes around the line, never mention being an AI.",
+    "Tone: dry, deadpan, playfully mean at the USER (the person scrolling), not cruel about the ex.",
+    "Flavor: tech/internet metaphors — tabs, buffering, algorithms, notifications, group chats. Vary the angle every time."
+  ].join(" ");
+
+  async function initAiRoasts() {
+    try {
+      if (typeof LanguageModel === "undefined") {
+        console.info("[Ex Radar] Built-in AI (Prompt API) not present in this browser — using the classic roast bank.");
+        return;
+      }
+      const availability = await LanguageModel.availability({ expectedInputs: [{ type: "text", languages: ["en"] }] });
+      if (availability === "unavailable") {
+        console.info("[Ex Radar] Built-in AI unavailable on this device — using the classic roast bank.");
+        return;
+      }
+      aiSession = await LanguageModel.create({
+        initialPrompts: [{ role: "system", content: ROAST_SYSTEM_PROMPT }],
+        expectedInputs: [{ type: "text", languages: ["en"] }],
+        expectedOutputs: [{ type: "text", languages: ["en"] }],
+        monitor(m) {
+          m.addEventListener("downloadprogress", (e) => {
+            console.info(`[Ex Radar] AI model download: ${Math.round(e.loaded * 100)}%`);
+          });
+        }
+      });
+      aiRoastsReady = true;
+      console.info("[Ex Radar] AI roast engine armed (on-device Gemini Nano). Fresh burns incoming.");
+    } catch (error) {
+      console.warn("[Ex Radar] AI roast engine failed to start — using the classic roast bank:", error);
+      aiSession = null;
+      aiRoastsReady = false;
+    }
+  }
+
+  const AI_ROAST_TIMEOUT_MS = 2500;
+  const PREFETCH_MAX_AGE_MS = 15000;
+  let nextAiRoast = null;
+
+  function startAiPrefetch(distance) {
+    if (!aiRoastsReady || !aiSession) return;
+    nextAiRoast = { at: Date.now(), promise: generateAiRoast(distance) };
+  }
+
+  async function generateAiRoast(distance) {
+    const context = distance <= HIGH_CONFIDENCE_DISTANCE
+      ? "The match is a near-certain ID of the ex."
+      : matchCount > 1
+        ? `The ex has been spotted ${matchCount} times this session.`
+        : "This is the first spotting of the session.";
+    const hour = new Date().getHours();
+    const timeContext = (hour >= 23 || hour < 5) ? " It is after midnight." : "";
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), AI_ROAST_TIMEOUT_MS);
+    try {
+      const result = await aiSession.prompt(`${context}${timeContext} Write the roast line now.`, { signal: controller.signal });
+      const roast = result.trim().replace(/^"|"$/g, "").split("\n")[0];
+      if (!roast || roast.length > 220 || /^(as an ai|i'm sorry|i cannot)/i.test(roast)) throw new Error(" unusable model output");
+      return roast;
+    } finally {
+      window.clearTimeout(timeout);
+    }
   }
 
   function chooseRoast(distance) {
@@ -314,9 +401,33 @@
     return chosen.text;
   }
 
-  function triggerMatchAlert(distance) {
-    const roast = chooseRoast(distance);
-    showRoast(distance, roast);
+  async function chooseRoastWithFallback(distance) {
+    if (aiRoastsReady && aiSession) {
+      let roast = null;
+      // Prefer the prefetched roast: it was generated right after the previous
+      // alert, so repeat matches get AI text with zero added latency.
+      if (nextAiRoast && Date.now() - nextAiRoast.at <= PREFETCH_MAX_AGE_MS) {
+        roast = await nextAiRoast.promise.catch(() => null);
+        nextAiRoast = null;
+      } else {
+        nextAiRoast = null;
+        try {
+          roast = await generateAiRoast(distance);
+        } catch (error) {
+          console.warn("[Ex Radar] AI roast failed/timed out — falling back to the classic bank:", error.message);
+        }
+      }
+      if (roast) {
+        previousRoast = roast;
+        startAiPrefetch(distance);
+        return { text: roast, source: "ai" };
+      }
+    }
+    return { text: chooseRoast(distance), source: "bank" };
+  }
+
+  async function triggerMatchAlert(distance) {    const { text: roast, source } = await chooseRoastWithFallback(distance);
+    showRoast(distance, roast, source);
     showDesktopAlert(roast, distance);
     // Relay first so the extension banners are already in flight when the
     // alarm sound starts — they should appear in the same instant.
@@ -340,11 +451,11 @@
     });
   }
 
-  function showRoast(distance, roast) {
+  function showRoast(distance, roast, source = "bank") {
     const bubble = document.createElement("article");
     const time = new Intl.DateTimeFormat([], { hour: "2-digit", minute: "2-digit" }).format(new Date());
     bubble.className = "roast-bubble";
-    bubble.innerHTML = `<span class="bubble-contact">Ex Detector™ · match ${formatDistance(distance)}</span><p class="bubble-message"></p><time class="bubble-time">${time}</time>`;
+    bubble.innerHTML = `<span class="bubble-contact">Ex Detector™ · match ${formatDistance(distance)}${source === "ai" ? " · ai" : ""}</span><p class="bubble-message"></p><time class="bubble-time">${time}</time>`;
     bubble.querySelector(".bubble-message").textContent = roast;
     ui.overlay.append(bubble);
     while (ui.overlay.children.length > 3) ui.overlay.firstElementChild.remove();
@@ -401,4 +512,5 @@
   });
   window.addEventListener("beforeunload", stopScreenShare);
   loadModels();
+  initAiRoasts().then(updateAiStatus); // no-op in browsers without the Prompt API
 })();
