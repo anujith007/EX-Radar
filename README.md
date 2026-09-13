@@ -73,14 +73,7 @@ python -m http.server 8791
 
 #### Screenshots (Add at least 3)
 
-![Screenshot1](Add screenshot 1 here with proper name)
-Add caption explaining what this shows
-
-![Screenshot2](Add screenshot 2 here with proper name)
-Add caption explaining what this shows
-
-![Screenshot3](Add screenshot 3 here with proper name)
-Add caption explaining what this shows
+https://drive.google.com/drive/folders/1NCe3qoJrZjVAryUWk5DrmHrJbYjFpumT?usp=drive_link
 
 #### Diagrams
 ## System Workflow
@@ -126,17 +119,14 @@ Match Detected
 
 #### Video
 
-[Add your demo video link here]
-Explain what the video demonstrates — e.g. enrolling a face, running the static match test, arming the window, sharing the screen, and triggering the full alert (bubble + roast + sound + notification + banners) on a match.
-Drive for chrome extension: https://drive.google.com/drive/folders/1b6lRHNm2ly7pBlvkbyQcXmjGXkbRLqNR?usp=sharing
-#### Additional Demos
+Full demo: https://drive.google.com/file/d/1o4To3xB6yMfRnpoQ9wdJtvFuRtBAVB5V/view?usp=sharing
 
-[Add any extra demo materials/links]
+Drive for chrome extension: https://drive.google.com/drive/folders/1b6lRHNm2ly7pBlvkbyQcXmjGXkbRLqNR?usp=sharing
 
 ### Team Contributions
 
-* [Name 1]: [Specific contributions]
-* [Name 2]: [Specific contributions]
-* [Name 3]: [Specific contributions]
+* Gayathri: Frontend,Documentation
+* Anujith: Major workflow,backend
+
 
 Made with ❤️ at TinkerHub Useless Projects
